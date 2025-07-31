@@ -1,10 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://transformercyclehub.netlify.app',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: 'https://transformer-cycle-hub-backend.onrender.com',
 });
 
 // Attach auth token to every request

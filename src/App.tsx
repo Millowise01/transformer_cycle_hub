@@ -9,7 +9,7 @@ import Tutorials from './pages/Tutorials';
 import Rewards from './pages/Rewards';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
-import SignUp from './pages/SignUp';
+import { SignUp } from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
