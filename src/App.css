@@ -1,0 +1,33 @@
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header Styles - Removed conflicting styles to use Header.css instead */
+
+/* App-specific styles only - Home page styles moved to Home.css */
+
+/* Footer */
+.footer {
+  background-color: var(--dark);
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+} 
