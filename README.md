@@ -204,9 +204,11 @@ For a detailed list of all endpoints, please see the `backend/README.md` file.
 - `GET /api/auth/me` - Get current user
 
 ### User Management
+
 - `GET /api/users` - Get all users
 
 ### Pickup Services
+
 - `GET /api/pickups` - Get all pickups
 - `POST /api/pickups` - Create pickup request
 
@@ -266,33 +268,33 @@ This project is optimized for deployment on **Vercel**. You should deploy the fr
 
 ### 1. Deploying the Backend
 
-1.  Create a new project on Vercel and link it to your GitHub repository.
-2.  When configuring the project, set the **Root Directory** to `backend`.
-3.  Vercel will automatically detect it as a Node.js project.
-4.  Go to **Settings -> Environment Variables** and add the production variables for the backend:
+1. Create a new project on Vercel and link it to your GitHub repository.
+2. When configuring the project, set the **Root Directory** to `backend`.
+3. Vercel will automatically detect it as a Node.js project.
+4. Go to **Settings -> Environment Variables** and add the production variables for the backend:
     - `MONGODB_URI`: Your production MongoDB Atlas connection string.
     - `JWT_SECRET`: A new, strong, randomly generated secret key.
     - `CORS_ORIGIN`: **Leave this blank for now.** You will add it after deploying the frontend.
     - `NODE_ENV`: `production`
     - `EMAIL_USER`, `EMAIL_PASS`, etc. for your email service.
-5.  Deploy the project. Once deployed, note the public URL (e.g., `https://your-backend-app.vercel.app`).
+5. Deploy the project. Once deployed, note the public URL (e.g., `https://your-backend-app.vercel.app`).
 
 ### 2. Deploying the Frontend
 
-1.  Create another new project on Vercel from the same repository.
-2.  Set the **Root Directory** to `./` (the root of the repository).
-3.  Vercel will detect it as a Create React App project.
-4.  Go to **Settings -> Environment Variables** and add the required variables:
+1. Create another new project on Vercel from the same repository.
+2. Set the **Root Directory** to `./` (the root of the repository).
+3. Vercel will detect it as a Create React App project.
+4. Go to **Settings -> Environment Variables** and add the required variables:
     - `REACT_APP_API_URL`: The full URL of your **deployed backend API** (e.g., `https://your-backend-app.vercel.app/api`).
     - `REACT_APP_GOOGLE_MAPS_API_KEY`: Your Google Maps API key.
-5.  Deploy the project. Note its public URL (e.g., `https://your-frontend-app.vercel.app`).
+5. Deploy the project. Note its public URL (e.g., `https://your-frontend-app.vercel.app`).
 
 ### 3. Final Configuration (Crucial Step)
 
-1.  Go back to your **backend project's settings** on Vercel.
-2.  Navigate to **Environment Variables**.
-3.  Edit the `CORS_ORIGIN` variable and set its value to your **frontend's public URL** (e.g., `https://your-frontend-app.vercel.app`).
-4.  Trigger a new deployment for the backend project to apply the new environment variable.
+1. Go back to your **backend project's settings** on Vercel.
+2. Navigate to **Environment Variables**.
+3. Edit the `CORS_ORIGIN` variable and set its value to your **frontend's public URL** (e.g., `https://your-frontend-app.vercel.app`).
+4. Trigger a new deployment for the backend project to apply the new environment variable.
 
 After the backend redeploys, your application should be fully functional, and sign-up/login will work correctly.
 

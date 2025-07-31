@@ -1,15 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // The baseURL will be read from the .env file
   baseURL: process.env.REACT_APP_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// This is an interceptor that automatically adds the authentication token
-// to every request you make, so you don't have to do it manually in every component.
+// Attach auth token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -20,5 +18,10 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
+
+// Fetch tutorials with optional query string
+export const fetchTutorials = async (queryParams: string) => {
+  return api.get(`/api/tutorials?${queryParams}`);
+};
 
 export default api;

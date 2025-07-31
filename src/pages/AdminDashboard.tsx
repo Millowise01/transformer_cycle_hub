@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaUsers, FaRecycle, FaChartBar, FaCog, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUsers, FaRecycle, FaChartBar, FaCog } from 'react-icons/fa';
 import axios from 'axios';
 import './AdminDashboard.css';
 
@@ -77,6 +77,7 @@ const AdminDashboard: React.FC = () => {
       });
 
       // Fetch user stats
+      // Assuming a /users/stats endpoint exists and is protected
       const userResponse = await axios.get('/api/users/stats', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -194,7 +195,7 @@ const AdminDashboard: React.FC = () => {
           </div>
           <div className="stat-info">
             <h3>Waste Processed</h3>
-            <p className="stat-number">{stats.totalWeight.toFixed(1)} tons</p>
+            <p className="stat-number">{stats.totalWeight.toFixed(1)} kg</p>
           </div>
         </div>
         
@@ -221,35 +222,15 @@ const AdminDashboard: React.FC = () => {
           ) : (
           <div className="pickup-list">
               {pickups.map((pickup) => (
-                <div key={pickup._id} className={`pickup-item ${pickup.status}`}>
-                  <div className="pickup-header">
-              <div className="pickup-info">
+                <div key={pickup._id} className={`pickup-item ${pickup.status}`} onClick={() => setSelectedPickup(pickup)}>
+                  <div className="pickup-info">
                       <h4>{pickup.wasteType.charAt(0).toUpperCase() + pickup.wasteType.slice(1)} Waste</h4>
                       <p><strong>User:</strong> {pickup.user.firstName} {pickup.user.lastName}</p>
                       <p><strong>Quantity:</strong> {pickup.quantity}kg • <strong>Date:</strong> {formatDate(pickup.pickupDate)} • <strong>Time:</strong> {pickup.pickupTime}</p>
                       <p><strong>Address:</strong> {pickup.address}</p>
-                      <p><strong>Status:</strong> <span className={`status-badge ${pickup.status}`}>{pickup.status.toUpperCase()}</span></p>
                       {pickup.notes && <p><strong>Notes:</strong> {pickup.notes}</p>}
-              </div>
-                    {pickup.status === 'pending' && (
-              <div className="pickup-actions">
-                        <button 
-                          className="btn approve-btn"
-                          onClick={() => handleApprove(pickup._id)}
-                          disabled={actionLoading === pickup._id}
-                        >
-                          {actionLoading === pickup._id ? 'Approving...' : <><FaCheck /> Approve</>}
-                        </button>
-                        <button 
-                          className="btn reject-btn"
-                          onClick={() => handleReject(pickup._id)}
-                          disabled={actionLoading === pickup._id}
-                        >
-                          {actionLoading === pickup._id ? 'Rejecting...' : <><FaTimes /> Reject</>}
-                        </button>
-                      </div>
-                    )}
                   </div>
+                  <span className={`status-badge ${pickup.status}`}>{pickup.status}</span>
               </div>
               ))}
             </div>
@@ -289,7 +270,7 @@ const AdminDashboard: React.FC = () => {
                   <button 
                     className="btn reject-btn"
                     onClick={() => handleReject(selectedPickup._id)}
-                    disabled={actionLoading === selectedPickup._id}
+                    disabled={actionLoading === selectedPickup._id || !adminNotes.trim()}
                   >
                     {actionLoading === selectedPickup._id ? 'Rejecting...' : 'Reject'}
                   </button>

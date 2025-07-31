@@ -1,390 +1,104 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import {
-  FaPlay, FaClock, FaStar, FaCheck, FaSearch, FaFilter,
-  FaGraduationCap, FaRecycle, FaGlasses, FaPaperPlane, FaTshirt
-} from 'react-icons/fa';
-import './Tutorials.css';
+import { useEffect, useState } from 'react';
+import { fetchTutorials } from '../api';
+
 
 interface Tutorial {
-  _id: string;
+  id: number;
   title: string;
-  description: string;
-  videoUrl: string;
-  thumbnail: string;
   category: string;
   difficulty: string;
-  duration: number;
-  pointsReward: number;
-  materials: Array<{
-    name: string;
-    quantity: string;
-    optional: boolean;
-  }>;
-  steps: Array<{
-    stepNumber: number;
-    title: string;
-    description: string;
-    imageUrl: string;
-  }>;
+  videoUrl: string;
+  completed: boolean;
 }
 
-interface UserTutorial {
-  _id: string;
-  tutorial: Tutorial;
-  isCompleted: boolean;
-  completedAt: string;
-  pointsEarned: number;
-  watchProgress: number;
-  lastWatchedAt: string;
-}
-
-const Tutorials: React.FC = () => {
+function Tutorials() {
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
-  const [userTutorials, setUserTutorials] = useState<UserTutorial[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('');
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const fetchTutorials = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (selectedCategory) params.append('category', selectedCategory);
-      if (selectedDifficulty) params.append('difficulty', selectedDifficulty);
-      if (searchTerm) params.append('search', searchTerm);
-
-      const response = await axios.get(`/api/tutorials?${params.toString()}`);
-      if (response.data.success) {
-        setTutorials(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching tutorials:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedCategory, selectedDifficulty, searchTerm]);
+  const [category, setCategory] = useState('');
+  const [difficulty, setDifficulty] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    checkAuthStatus();
-    fetchTutorials();
-  }, [fetchTutorials]);
+    const getTutorials = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (category) params.append('category', category);
+        if (difficulty) params.append('difficulty', difficulty);
+        if (search) params.append('search', search);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserProgress();
-    }
-  }, [isAuthenticated]);
-
-  const checkAuthStatus = () => {
-    const token = localStorage.getItem('accessToken');
-    setIsAuthenticated(!!token);
-  };
-
-  const fetchUserProgress = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) return;
-
-      const response = await axios.get('/api/tutorials/progress', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        setUserTutorials(response.data.data);
+        const response = await fetchTutorials(params.toString());
+        setTutorials(response.data);
+      } catch (err) {
+        console.error('Failed to fetch tutorials:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching user progress:', error);
-    }
-  };
+    };
 
-  const updateProgress = async (tutorialId: string, progress: number, completed: boolean = false) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) return;
-
-      await axios.put(`/api/tutorials/${tutorialId}/progress`, {
-        progress,
-        completed
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      await fetchUserProgress();
-    } catch (error) {
-      console.error('Error updating progress:', error);
-    }
-  };
-
-  const handleVideoComplete = () => {
-    if (selectedTutorial) {
-      updateProgress(selectedTutorial._id, 100, true);
-      setShowVideoModal(false);
-      alert('🎉 Tutorial completed! You earned 10 points!');
-      window.dispatchEvent(new CustomEvent('tutorialCompleted'));
-    }
-  };
-
-  const handleVideoProgress = (progress: number) => {
-    if (selectedTutorial && progress > 90) {
-      handleVideoComplete();
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'plastic': return <FaRecycle />;
-      case 'paper': return <FaPaperPlane />;
-      case 'glass': return <FaGlasses />;
-      case 'textile': return <FaTshirt />;
-      default: return <FaGraduationCap />;
-    }
-  };
-
-
-  const getUserProgress = (tutorialId: string) => {
-    return userTutorials.find(ut => ut.tutorial._id === tutorialId) || null;
-  };
-
-  const filteredTutorials = tutorials.filter(tutorial =>
-    tutorial.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tutorial.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const categories = [
-    { value: '', label: 'All Categories' },
-    { value: 'plastic', label: 'Plastic', icon: <FaRecycle /> },
-    { value: 'paper', label: 'Paper', icon: <FaPaperPlane /> },
-    { value: 'glass', label: 'Glass', icon: <FaGlasses /> },
-    { value: 'metal', label: 'Metal' },
-    { value: 'textile', label: 'Textile', icon: <FaTshirt /> },
-    { value: 'general', label: 'General', icon: <FaGraduationCap /> }
-  ];
-
-  const difficulties = [
-    { value: '', label: 'All Levels' },
-    { value: 'beginner', label: 'Beginner' },
-    { value: 'intermediate', label: 'Intermediate' },
-    { value: 'advanced', label: 'Advanced' }
-  ];
+    getTutorials();
+  }, [category, difficulty, search]);
 
   return (
-    <div className="tutorials-page">
-      <div className="tutorials-header">
-        <h1>🎓 Upcycling Tutorials</h1>
-        <p>Learn creative ways to upcycle waste and earn points for each completed tutorial!</p>
-      </div>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Tutorials</h1>
 
-      <div className="tutorials-filters">
-        <div className="search-box">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search tutorials..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      <div className="flex gap-2 mb-4">
+        <label htmlFor="category-select" className="sr-only">Select category</label>
+        <select
+          id="category-select"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border p-1"
+          title="Select category"
+        >
+          <option value="">All Categories</option>
+          <option value="Design">Design</option>
+          <option value="Coding">Coding</option>
+          <option value="AI">AI</option>
+        </select>
 
-        <div className="filter-controls">
-          <div className="filter-group">
-            <FaFilter className="filter-icon" />
-            <label htmlFor="category-select" className="visually-hidden">Select Category</label>
-            <select
-              id="category-select"
-              aria-label="Select Category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map(category => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <label htmlFor="difficulty-select" className="sr-only">Select difficulty level</label>
+        <select
+          id="difficulty-select"
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+          className="border p-1"
+          title="Select difficulty level"
+        >
+          <option value="">All Levels</option>
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
+        </select>
 
-          <div className="filter-group">
-            <label htmlFor="difficulty-select" className="visually-hidden">Select Difficulty</label>
-            <select
-              id="difficulty-select"
-              aria-label="Select Difficulty"
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-            >
-              {difficulties.map(difficulty => (
-                <option key={difficulty.value} value={difficulty.value}>
-                  {difficulty.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border p-1 flex-1"
+        />
       </div>
 
       {loading ? (
-        <div className="loading">Loading tutorials...</div>
+        <p>Loading tutorials...</p>
+      ) : tutorials.length === 0 ? (
+        <p>No tutorials found.</p>
       ) : (
-        <div className="tutorials-grid">
-          {filteredTutorials.map((tutorial) => {
-            const userProgress = getUserProgress(tutorial._id);
-            const isCompleted = userProgress?.isCompleted;
-            const progress = userProgress?.watchProgress || 0;
-
-            return (
-              <div key={tutorial._id} className={`tutorial-card ${isCompleted ? 'completed' : ''}`}>
-                <div className="tutorial-thumbnail">
-                  {tutorial.thumbnail ? (
-                    <img src={tutorial.thumbnail} alt={tutorial.title} />
-                  ) : (
-                    <div className="thumbnail-placeholder">{getCategoryIcon(tutorial.category)}</div>
-                  )}
-                  {isCompleted && (
-                    <div className="completion-badge"><FaCheck /></div>
-                  )}
-                  <div className="tutorial-overlay">
-                    <button
-                      className="play-button"
-                      title="Play Tutorial"
-                      onClick={() => {
-                        setSelectedTutorial(tutorial);
-                        setShowVideoModal(true);
-                      }}
-                    >
-                      <FaPlay />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="tutorial-info">
-                  <div className="tutorial-header">
-                    <h3>{tutorial.title}</h3>
-                    <div className="tutorial-meta">
-                      <span className={`difficulty difficulty-${tutorial.difficulty}`}>
-                        {tutorial.difficulty}
-                      </span>
-                      <span className="duration"><FaClock /> {tutorial.duration} min</span>
-                      <span className="points"><FaStar /> +{tutorial.pointsReward} pts</span>
-                    </div>
-                  </div>
-
-                  <p className="tutorial-description">{tutorial.description}</p>
-
-                  {userProgress && (
-                    <div className="progress-bar">
-                      <div
-                        className="progress-fill"
-                        data-progress={progress}
-                      ></div>
-                      <span className="progress-text">{Math.round(progress)}%</span>
-                    </div>
-                  )}
-
-                  <div className="tutorial-actions">
-                    <button
-                      className="btn watch-btn"
-                      onClick={() => {
-                        setSelectedTutorial(tutorial);
-                        setShowVideoModal(true);
-                      }}
-                    >
-                      {isCompleted ? 'Watch Again' : 'Start Learning'}
-                    </button>
-                    {tutorial.materials.length > 0 && (
-                      <button className="btn materials-btn">View Materials</button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {showVideoModal && selectedTutorial && (
-        <div className="video-modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{selectedTutorial.title}</h2>
-              <button className="close-btn" onClick={() => setShowVideoModal(false)}>×</button>
-            </div>
-
-            <div className="video-container">
-              <video
-                className="tutorial-video"
-                controls
-                autoPlay
-                onTimeUpdate={(e) => {
-                  const video = e.target as HTMLVideoElement;
-                  const progress = (video.currentTime / video.duration) * 100;
-                  handleVideoProgress(progress);
-                }}
-                onEnded={handleVideoComplete}
-              >
-                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4" />
-                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-
-              <div className="video-complete-demo-btn-container">
-                <button
-                  className="btn watch-btn"
-                  onClick={() => {
-                    alert('Tutorial completed! You earned 10 points!');
-                    handleVideoComplete();
-                  }}
-                >
-                  Complete Tutorial (Demo)
-                </button>
-              </div>
-            </div>
-
-            <div className="tutorial-details">
-              <div className="materials-section">
-                <h3>Materials Needed:</h3>
-                <ul>
-                  {selectedTutorial.materials.map((material, index) => (
-                    <li key={index} className={material.optional ? 'optional' : ''}>
-                      {material.name} - {material.quantity}
-                      {material.optional && <span className="optional-tag">(Optional)</span>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="steps-section">
-                <h3>Steps:</h3>
-                {selectedTutorial.steps.map((step) => (
-                  <div key={step.stepNumber} className="step">
-                    <h4>Step {step.stepNumber}: {step.title}</h4>
-                    <p>{step.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!isAuthenticated && (
-        <div className="auth-prompt">
-          <h3>Sign in to track your progress and earn points!</h3>
-          <div className="auth-buttons">
-            <Link to="/login" className="btn">Login</Link>
-            <Link to="/signup" className="btn">Sign Up</Link>
-          </div>
-        </div>
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {tutorials.map((tutorial) => (
+            <li key={tutorial.id} className="border p-3 rounded">
+              <h2 className="font-semibold">{tutorial.title}</h2>
+              <p>{tutorial.category} — {tutorial.difficulty}</p>
+              <video src={tutorial.videoUrl} controls className="w-full mt-2" />
+              {tutorial.completed && <p className="text-green-600 mt-1">Completed</p>}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
-};
+}
 
 export default Tutorials;

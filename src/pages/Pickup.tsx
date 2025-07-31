@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaRecycle, FaCalendar, FaMapMarkerAlt } from 'react-icons/fa';
-import api from '../services/api'; // 1. Import the centralized API instance
+import axios from 'axios';
 import './Pickup.css';
 
 const Pickup: React.FC = () => {
@@ -36,7 +36,12 @@ const Pickup: React.FC = () => {
         return;
       }
 
-      const response = await api.post('/pickups', formData); // 2. Use the api instance
+      const response = await axios.post('/api/pickups', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (response.data.success) {
         setSubmitMessage('Pickup scheduled successfully! You will receive a confirmation email shortly.');
