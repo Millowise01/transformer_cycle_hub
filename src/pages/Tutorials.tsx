@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaPlay, FaClock, FaStar, FaCheck, FaSearch, FaFilter, FaGraduationCap, FaRecycle, FaGlasses, FaPaperPlane, FaTshirt } from 'react-icons/fa';
+import {
+  FaPlay, FaClock, FaStar, FaCheck, FaSearch, FaFilter,
+  FaGraduationCap, FaRecycle, FaGlasses, FaPaperPlane, FaTshirt
+} from 'react-icons/fa';
 import './Tutorials.css';
 
 interface Tutorial {
@@ -46,26 +49,9 @@ const Tutorials: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('');
   const [showVideoModal, setShowVideoModal] = useState(false);
-  const [videoProgress, setVideoProgress] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  useEffect(() => {
-    checkAuthStatus();
-    fetchTutorials();
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchUserProgress();
-    }
-  }, [isAuthenticated]);
-
-  const checkAuthStatus = () => {
-    const token = localStorage.getItem('accessToken');
-    setIsAuthenticated(!!token);
-  };
-
-  const fetchTutorials = async () => {
+  const fetchTutorials = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (selectedCategory) params.append('category', selectedCategory);
@@ -81,6 +67,22 @@ const Tutorials: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, [selectedCategory, selectedDifficulty, searchTerm]);
+
+  useEffect(() => {
+    checkAuthStatus();
+    fetchTutorials();
+  }, [fetchTutorials]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserProgress();
+    }
+  }, [isAuthenticated]);
+
+  const checkAuthStatus = () => {
+    const token = localStorage.getItem('accessToken');
+    setIsAuthenticated(!!token);
   };
 
   const fetchUserProgress = async () => {
@@ -116,7 +118,6 @@ const Tutorials: React.FC = () => {
         }
       });
 
-      // Refresh user progress
       await fetchUserProgress();
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -127,17 +128,13 @@ const Tutorials: React.FC = () => {
     if (selectedTutorial) {
       updateProgress(selectedTutorial._id, 100, true);
       setShowVideoModal(false);
-      setVideoProgress(0);
       alert('🎉 Tutorial completed! You earned 10 points!');
-      
-      // Dispatch event to notify dashboard
       window.dispatchEvent(new CustomEvent('tutorialCompleted'));
     }
   };
 
   const handleVideoProgress = (progress: number) => {
-    setVideoProgress(progress);
-    if (selectedTutorial && progress > 90) { // Mark as complete at 90%
+    if (selectedTutorial && progress > 90) {
       handleVideoComplete();
     }
   };
@@ -152,25 +149,15 @@ const Tutorials: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return '#4CAF50';
-      case 'intermediate': return '#FF9800';
-      case 'advanced': return '#f44336';
-      default: return '#666';
-    }
-  };
 
   const getUserProgress = (tutorialId: string) => {
-    const userTutorial = userTutorials.find(ut => ut.tutorial._id === tutorialId);
-    return userTutorial || null;
+    return userTutorials.find(ut => ut.tutorial._id === tutorialId) || null;
   };
 
-  const filteredTutorials = tutorials.filter(tutorial => {
-    const matchesSearch = tutorial.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tutorial.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  const filteredTutorials = tutorials.filter(tutorial =>
+    tutorial.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tutorial.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const categories = [
     { value: '', label: 'All Categories' },
@@ -196,7 +183,6 @@ const Tutorials: React.FC = () => {
         <p>Learn creative ways to upcycle waste and earn points for each completed tutorial!</p>
       </div>
 
-      {/* Search and Filter Section */}
       <div className="tutorials-filters">
         <div className="search-box">
           <FaSearch className="search-icon" />
@@ -211,7 +197,10 @@ const Tutorials: React.FC = () => {
         <div className="filter-controls">
           <div className="filter-group">
             <FaFilter className="filter-icon" />
+            <label htmlFor="category-select" className="visually-hidden">Select Category</label>
             <select
+              id="category-select"
+              aria-label="Select Category"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
@@ -224,7 +213,10 @@ const Tutorials: React.FC = () => {
           </div>
 
           <div className="filter-group">
+            <label htmlFor="difficulty-select" className="visually-hidden">Select Difficulty</label>
             <select
+              id="difficulty-select"
+              aria-label="Select Difficulty"
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
             >
@@ -237,12 +229,11 @@ const Tutorials: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      {/* Tutorials Grid */}
+
       {loading ? (
         <div className="loading">Loading tutorials...</div>
       ) : (
-      <div className="tutorials-grid">
+        <div className="tutorials-grid">
           {filteredTutorials.map((tutorial) => {
             const userProgress = getUserProgress(tutorial._id);
             const isCompleted = userProgress?.isCompleted;
@@ -254,20 +245,15 @@ const Tutorials: React.FC = () => {
                   {tutorial.thumbnail ? (
                     <img src={tutorial.thumbnail} alt={tutorial.title} />
                   ) : (
-                    <div className="thumbnail-placeholder">
-                      {getCategoryIcon(tutorial.category)}
-                    </div>
+                    <div className="thumbnail-placeholder">{getCategoryIcon(tutorial.category)}</div>
                   )}
-                  
                   {isCompleted && (
-                    <div className="completion-badge">
-                      <FaCheck />
-                    </div>
+                    <div className="completion-badge"><FaCheck /></div>
                   )}
-                  
-              <div className="tutorial-overlay">
+                  <div className="tutorial-overlay">
                     <button
                       className="play-button"
+                      title="Play Tutorial"
                       onClick={() => {
                         setSelectedTutorial(tutorial);
                         setShowVideoModal(true);
@@ -275,22 +261,18 @@ const Tutorials: React.FC = () => {
                     >
                       <FaPlay />
                     </button>
-              </div>
-            </div>
+                  </div>
+                </div>
 
                 <div className="tutorial-info">
                   <div className="tutorial-header">
-              <h3>{tutorial.title}</h3>
-              <div className="tutorial-meta">
-                      <span className="difficulty" style={{ color: getDifficultyColor(tutorial.difficulty) }}>
+                    <h3>{tutorial.title}</h3>
+                    <div className="tutorial-meta">
+                      <span className={`difficulty difficulty-${tutorial.difficulty}`}>
                         {tutorial.difficulty}
                       </span>
-                <span className="duration">
-                        <FaClock /> {tutorial.duration} min
-                </span>
-                <span className="points">
-                        <FaStar /> +{tutorial.pointsReward} pts
-                </span>
+                      <span className="duration"><FaClock /> {tutorial.duration} min</span>
+                      <span className="points"><FaStar /> +{tutorial.pointsReward} pts</span>
                     </div>
                   </div>
 
@@ -298,9 +280,9 @@ const Tutorials: React.FC = () => {
 
                   {userProgress && (
                     <div className="progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${progress}%` }}
+                      <div
+                        className="progress-fill"
+                        data-progress={progress}
                       ></div>
                       <span className="progress-text">{Math.round(progress)}%</span>
                     </div>
@@ -316,11 +298,8 @@ const Tutorials: React.FC = () => {
                     >
                       {isCompleted ? 'Watch Again' : 'Start Learning'}
                     </button>
-                    
                     {tutorial.materials.length > 0 && (
-                      <button className="btn materials-btn">
-                        View Materials
-                      </button>
+                      <button className="btn materials-btn">View Materials</button>
                     )}
                   </div>
                 </div>
@@ -330,22 +309,17 @@ const Tutorials: React.FC = () => {
         </div>
       )}
 
-      {/* Video Modal */}
       {showVideoModal && selectedTutorial && (
         <div className="video-modal">
           <div className="modal-content">
             <div className="modal-header">
               <h2>{selectedTutorial.title}</h2>
-              <button 
-                className="close-btn"
-                onClick={() => setShowVideoModal(false)}
-              >
-                ×
-              </button>
+              <button className="close-btn" onClick={() => setShowVideoModal(false)}>×</button>
             </div>
-            
+
             <div className="video-container">
               <video
+                className="tutorial-video"
                 controls
                 autoPlay
                 onTimeUpdate={(e) => {
@@ -354,24 +328,21 @@ const Tutorials: React.FC = () => {
                   handleVideoProgress(progress);
                 }}
                 onEnded={handleVideoComplete}
-                style={{ width: '100%', maxHeight: '400px' }}
               >
                 <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4" />
                 <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
-              
-              {/* Fallback for demo - simulate video completion */}
-              <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                <button 
+
+              <div className="video-complete-demo-btn-container">
+                <button
                   className="btn watch-btn"
                   onClick={() => {
-                    alert('🎉 Tutorial completed! You earned 10 points!');
+                    alert('Tutorial completed! You earned 10 points!');
                     handleVideoComplete();
                   }}
-                  style={{ margin: '0 auto' }}
                 >
-                  🎬 Complete Tutorial (Demo)
+                  Complete Tutorial (Demo)
                 </button>
               </div>
             </div>
@@ -395,9 +366,9 @@ const Tutorials: React.FC = () => {
                   <div key={step.stepNumber} className="step">
                     <h4>Step {step.stepNumber}: {step.title}</h4>
                     <p>{step.description}</p>
-          </div>
-        ))}
-      </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -416,4 +387,4 @@ const Tutorials: React.FC = () => {
   );
 };
 
-export default Tutorials; 
+export default Tutorials;
