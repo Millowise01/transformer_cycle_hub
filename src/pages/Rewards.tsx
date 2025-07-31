@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaGift, FaStar, FaCheck, FaClock, FaTruck, FaTimes, FaFilter, FaSearch } from 'react-icons/fa';
+import { FaGift, FaStar, FaTimes, FaFilter, FaSearch } from 'react-icons/fa';
 import './Rewards.css';
 
 interface Reward {
@@ -132,15 +132,6 @@ const Rewards: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return '#ff9800';
-      case 'approved': return '#4caf50';
-      case 'delivered': return '#2196f3';
-      case 'cancelled': return '#f44336';
-      default: return '#666';
-    }
-  };
 
   const filteredRewards = rewards.filter(reward => {
     const matchesSearch = reward.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -160,7 +151,7 @@ const Rewards: React.FC = () => {
   return (
     <div className="rewards-page">
       <div className="rewards-header">
-        <h1>🎁 Rewards Center</h1>
+        <h1>Rewards Center</h1>
         <p>Redeem your green points for amazing eco-friendly rewards!</p>
       </div>
 
@@ -177,7 +168,7 @@ const Rewards: React.FC = () => {
             onClick={fetchUserRewards}
             title="Refresh points balance"
           >
-            🔄
+            
           </button>
         </div>
       </div>
@@ -200,6 +191,7 @@ const Rewards: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
+              aria-label="Filter rewards by category"
             >
               {categories.map(category => (
                 <option key={category.value} value={category.value}>
@@ -276,7 +268,7 @@ const Rewards: React.FC = () => {
                     {new Date(userReward.redeemedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="status-badge" style={{ backgroundColor: getStatusColor(userReward.status) }}>
+                <div className={`status-badge status-badge--${userReward.status}`}>
                   {userReward.status}
                 </div>
               </div>
@@ -294,6 +286,7 @@ const Rewards: React.FC = () => {
               <button 
                 className="close-btn"
                 onClick={() => setShowRedeemModal(false)}
+                title="Close"
               >
                 <FaTimes />
               </button>

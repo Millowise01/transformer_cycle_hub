@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaMapMarkerAlt, FaPhone, FaGlobe, FaClock, FaStar, FaFilter, FaSearch } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaPhone, FaGlobe, FaStar, FaFilter, FaSearch, FaRecycle, FaLeaf } from 'react-icons/fa';
 import './CommunityMap.css';
 
 interface RecyclingCenter {
@@ -37,8 +37,12 @@ const CommunityMap: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchCenters();
+    const fetchAndSetCenters = async () => {
+      await fetchCenters();
+    };
+    fetchAndSetCenters();
     getUserLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchCenters = async () => {
@@ -86,23 +90,14 @@ const CommunityMap: React.FC = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'recycling-center': return '🏭';
-      case 'eco-partner': return '🤝';
-      case 'drop-off-point': return '📦';
-      case 'composting-site': return '🌱';
-      default: return '📍';
+      case 'recycling-center': return <FaRecycle />;
+      case 'eco-partner': return <FaGlobe />;
+      case 'drop-off-point': return <FaMapMarkerAlt />;
+      case 'composting-site': return <FaLeaf />;
+      default: return <FaMapMarkerAlt />;
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'recycling-center': return '#4CAF50';
-      case 'eco-partner': return '#2196F3';
-      case 'drop-off-point': return '#FF9800';
-      case 'composting-site': return '#8BC34A';
-      default: return '#666';
-    }
-  };
 
   const filteredCenters = centers.filter(center => {
     const matchesSearch = center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -155,6 +150,7 @@ const CommunityMap: React.FC = () => {
           <div className="filter-group">
             <FaFilter className="filter-icon" />
             <select
+              aria-label="Filter by center type"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
             >
@@ -168,6 +164,7 @@ const CommunityMap: React.FC = () => {
 
           <div className="filter-group">
             <select
+              aria-label="Filter by service type"
               value={filterService}
               onChange={(e) => setFilterService(e.target.value)}
             >
@@ -206,7 +203,7 @@ const CommunityMap: React.FC = () => {
 
             {/* Centers List */}
             <div className="centers-list">
-              <h3>📍 Nearby Centers ({filteredCenters.length})</h3>
+              <h3>Nearby Centers ({filteredCenters.length})</h3>
               
               {filteredCenters.length === 0 ? (
                 <div className="no-centers">
@@ -222,7 +219,7 @@ const CommunityMap: React.FC = () => {
                       onClick={() => setSelectedCenter(center)}
                     >
                       <div className="center-header">
-                        <span className="center-icon" style={{ color: getTypeColor(center.type) }}>
+                        <span className={`center-icon ${center.type}`}>
                           {getTypeIcon(center.type)}
                         </span>
                         <div className="center-rating">

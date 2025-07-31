@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHeart, FaLeaf, FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
 import './Footer.css';
 
 const Footer: React.FC = () => {
@@ -33,16 +33,16 @@ const Footer: React.FC = () => {
           <div className="footer-section">
             <h4>Follow Us</h4>
             <div className="social-links">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" title="Facebook">
                 <FaFacebook />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" title="Twitter">
                 <FaTwitter />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" title="Instagram">
                 <FaInstagram />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" title="LinkedIn">
                 <FaLinkedin />
               </a>
             </div>
@@ -51,7 +51,7 @@ const Footer: React.FC = () => {
         
         <div className="footer-bottom">
           <p>
-            © 2024 Transformer Cycle Hub. Made with <FaHeart className="heart-icon" /> and <FaLeaf className="leaf-icon" /> for a greener future.
+            © 2025 Transformer Cycle Hub. All rights reserved.
           </p>
         </div>
       </div>

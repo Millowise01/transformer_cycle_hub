@@ -26,11 +26,17 @@ const Dashboard: React.FC = () => {
     totalWeight: 0
   });
 
+  // Function to refresh all data (called after earning points)
+  const refreshDashboard = React.useCallback(() => {
+    fetchUserPickups();
+    fetchUserPoints();
+  }, []);
+
   useEffect(() => {
     fetchUserData();
     fetchUserPickups();
     fetchUserPoints();
-  }, []);
+  }, [refreshDashboard]);
 
   const fetchUserData = () => {
     const userDataStr = localStorage.getItem('userData');
@@ -105,12 +111,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Function to refresh all data (called after earning points)
-  const refreshDashboard = () => {
-    fetchUserPickups();
-    fetchUserPoints();
-  };
-
   // Listen for tutorial completion events
   useEffect(() => {
     const handleTutorialComplete = () => {
@@ -121,7 +121,7 @@ const Dashboard: React.FC = () => {
     return () => {
       window.removeEventListener('tutorialCompleted', handleTutorialComplete);
     };
-  }, []);
+  }, [refreshDashboard]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -167,17 +167,9 @@ const Dashboard: React.FC = () => {
           <span className="points-value">{stats.totalPoints}</span>
           <button 
             onClick={fetchUserPoints}
-            style={{ 
-              background: 'rgba(255,255,255,0.2)', 
-              border: 'none', 
-              color: 'white', 
-              padding: '5px 10px', 
-              borderRadius: '5px',
-              marginLeft: '10px',
-              cursor: 'pointer'
-            }}
+            className="refresh-points-btn"
           >
-            🔄 Refresh
+            Refresh
           </button>
         </div>
       </div>
