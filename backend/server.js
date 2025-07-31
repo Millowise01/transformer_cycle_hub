@@ -1,18 +1,14 @@
+require('dotenv').config({ path: 'config.env' });
+console.log('Loaded Mongo URI:', process.env.MONGODB_URI);
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const path = require('path');
-require('dotenv').config({ path: './config.env' });
 
 // Import database connection
 const connectDB = require('./utils/database');
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const pickupRoutes = require('./routes/pickups');
-const contactRoutes = require('./routes/contact');
 const activityRoutes = require('./routes/activities');
 
 const app = express();
