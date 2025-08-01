@@ -1,28 +1,32 @@
 # JWT Security Guide
 
-## 🔐 Current JWT Setup
+## Current JWT Setup
 
 Your application now uses a secure JWT implementation with:
 
 ### **Token Types**
+
 - **Access Token**: Short-lived (7 days) for API access
 - **Refresh Token**: Long-lived (30 days) for getting new access tokens
 
 ### **Security Features**
+
 - **Issuer/Audience**: Tokens are signed with specific issuer and audience
 - **Expiration**: Tokens automatically expire
 - **Strong Secret**: Uses a strong JWT secret key
 
-## 🛡️ JWT Security Best Practices
+## JWT Security Best Practices
 
 ### **1. JWT Secret Management**
 
 **Current Setup (Development)**:
+
 ```env
 JWT_SECRET=transformer_cycle_hub_super_secret_key_2024_change_in_production
 ```
 
 **For Production**:
+
 ```bash
 # Generate a strong random secret (32+ characters)
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -43,10 +47,12 @@ JWT_SECRET=your_production_secret_here
 ### **3. Token Storage**
 
 **Frontend Storage**:
+
 - Access tokens stored in localStorage (for development)
 - Refresh tokens stored in httpOnly cookies (for production)
 
 **Backend Storage**:
+
 - Consider implementing token blacklisting for logout
 - Store refresh tokens in database for revocation
 
@@ -68,7 +74,7 @@ const verifyToken = (token) => {
 };
 ```
 
-## 🔧 JWT Configuration Options
+## JWT Configuration Options
 
 ### **Token Expiration**
 
@@ -101,22 +107,25 @@ JWT_REFRESH_EXPIRE=30d
 }
 ```
 
-## 🚀 Production Security Checklist
+## Production Security Checklist
 
 ### **Before Deployment**
 
 1. **Generate Strong JWT Secret**:
+
    ```bash
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
 
 2. **Set Environment Variables**:
+
    ```env
    JWT_SECRET=your_generated_secret_here
    NODE_ENV=production
    ```
 
 3. **Update CORS Settings**:
+
    ```env
    CORS_ORIGIN=https://yourdomain.com
    ```
@@ -124,6 +133,7 @@ JWT_REFRESH_EXPIRE=30d
 4. **Use HTTPS**: Always use HTTPS in production
 
 5. **Implement Token Blacklisting** (Optional):
+
    ```javascript
    // Store invalidated tokens in Redis/database
    const blacklistToken = async (token) => {
@@ -147,7 +157,7 @@ app.use(helmet({
 }));
 ```
 
-## 🔍 JWT Debugging
+## JWT Debugging
 
 ### **Check Token Validity**
 
@@ -165,7 +175,7 @@ console.log('Expires:', new Date(payload.exp * 1000));
 2. **"Token expired"**: Token has passed expiration time
 3. **"Invalid signature"**: Token was signed with different secret
 
-## 📱 Frontend Token Management
+## Frontend Token Management
 
 ### **Token Storage**
 
@@ -203,7 +213,7 @@ const makeAuthenticatedRequest = async (url, options = {}) => {
 };
 ```
 
-## 🔄 Token Refresh Flow
+## Token Refresh Flow
 
 ### **Automatic Token Refresh**
 
@@ -248,7 +258,7 @@ const refreshTokenIfNeeded = async () => {
 };
 ```
 
-## 🛠️ Testing JWT
+## Testing JWT
 
 ### **Test Token Generation**
 
@@ -275,8 +285,8 @@ console.log('Decoded token:', decoded);
 "
 ```
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [JWT.io](https://jwt.io/) - JWT debugger and documentation
 - [MongoDB Atlas](https://www.mongodb.com/atlas) - Database hosting
-- [Express Security](https://expressjs.com/en/advanced/best-practices-security.html) - Security best practices 
+- [Express Security](https://expressjs.com/en/advanced/best-practices-security.html) - Security best practices

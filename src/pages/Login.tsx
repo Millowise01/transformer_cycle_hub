@@ -1,64 +1,192 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../api'; // Import the new centralized API client
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaLeaf } from 'react-icons/fa';
+import { authAPI } from '../services/api';
+import { setAuthData } from '../utils/auth';
+import './Auth.css';
 
-const Login = () => {
+const Login: React.FC = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Check if user just registered
   useEffect(() => {
-    // Check for a query parameter to show a success message after registration
-    const params = new URLSearchParams(location.search);
-    if (params.get('registered') === 'true') {
-      setMessage('Account created successfully! Please sign in.');
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMessage('Account created successfully! Please sign in to continue.');
     }
-  }, [location.search]);
+  }, [location]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    // Clear error when user starts typing
     if (error) setError('');
+    if (successMessage) setSuccessMessage('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
+    
     try {
-      const response = await api.post('/auth/login', formData);
-      if (response.data.success) {
-        const { accessToken, refreshToken, user } = response.data.data;
-        // Store tokens and user data in localStorage
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('userData', JSON.stringify(user));
+      const response = await authAPI.login({
+        email: formData.email,
+        password: formData.password
+      });
 
-        // Redirect based on user role
-        if (user.role === 'admin') {
+      if (response.data.success) {
+        // Store tokens and user data using utility function
+        setAuthData(response.data.data);
+        
+        // Check user role and redirect accordingly
+        const userRole = response.data.data.user.role;
+        
+        console.log('Login successful:', { userRole, user: response.data.data.user });
+        
+        // Navigate based on user role
+        if (userRole === 'admin') {
           navigate('/admin');
         } else {
           navigate('/dashboard');
         }
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', error);
+      
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.response?.data?.errors) {
+        const errorMessages = error.response.data.errors.map((err: any) => err.msg).join(', ');
+        setError(errorMessages);
+      } else if (error.message === 'Network Error') {
+        setError('Unable to connect to server. Please check your internet connection.');
+      } else {
+        setError('Login failed. Please check your credentials and try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Sign In</h2>
-      <input name="email" onChange={handleChange} value={formData.email} placeholder="Email" />
-      <input name="password" type="password" onChange={handleChange} value={formData.password} placeholder="Password" />
-      <button type="submit">Login</button>
-      {message && <p className="success-message">{message}</p>}
-      {error && <p className="error-message">{error}</p>}
-    </form>
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header">
+            <div className="auth-logo">
+              <FaLeaf />
+            </div>
+            <h1>Welcome Back</h1>
+            <p>Sign in to your account to continue your eco-journey</p>
+          </div>
+          
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="success-message">
+              {successMessage}
+            </div>
+          )}
+          
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="email">Email Address</label>
+              <div className="input-group">
+                <FaUser />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter your email"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <div className="input-group">
+                <FaLock />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter your password"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
+            </div>
+            
+            <div className="form-options">
+              <label className="checkbox-label">
+                <input type="checkbox" disabled={isLoading} />
+                <span className="checkmark"></span>
+                Remember me
+              </label>
+              <Link to="/forgot-password" className="forgot-link">
+                Forgot password?
+              </Link>
+            </div>
+            
+            <button 
+              type="submit" 
+              className={`btn auth-btn ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+          
+          <div className="auth-divider">
+            <span>or</span>
+          </div>
+          
+          <div className="social-login">
+            <button className="btn social-btn google-btn" disabled={isLoading}>
+              Continue with Google
+            </button>
+            <button className="btn social-btn facebook-btn" disabled={isLoading}>
+              Continue with Facebook
+            </button>
+          </div>
+          
+          <div className="auth-footer">
+            <p>Don't have an account? <Link to="/signup">Sign Up</Link></p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default Login;
+export default Login; 

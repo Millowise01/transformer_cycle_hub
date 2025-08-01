@@ -11,7 +11,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `POST /api/pickups`
 
 **Request Body:**
-
 ```json
 {
   "pickupDate": "2024-01-15",
@@ -32,7 +31,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -52,7 +50,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **What happens:**
-
 - Pickup request is created with status "pending"
 - Activity record is created for user dashboard
 - Email notification is sent to admin
@@ -63,7 +60,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `GET /api/pickups/pending` (Admin only)
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -95,7 +91,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `PUT /api/pickups/:id/approve` (Admin only)
 
 **Request Body:**
-
 ```json
 {
   "adminNotes": "Approved - will schedule pickup for requested time"
@@ -103,7 +98,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -119,7 +113,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **What happens:**
-
 - Pickup status changes to "approved"
 - Activity record is created for user
 - Email notification is sent to user
@@ -130,7 +123,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `PUT /api/pickups/:id/reject` (Admin only)
 
 **Request Body:**
-
 ```json
 {
   "adminNotes": "Cannot pickup on requested date. Please reschedule for next week."
@@ -138,7 +130,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -154,7 +145,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **What happens:**
-
 - Pickup status changes to "rejected"
 - Activity record is created for user
 - Email notification is sent to user with rejection reason
@@ -165,7 +155,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `PUT /api/pickups/:id/complete` (Admin only)
 
 **Request Body:**
-
 ```json
 {
   "actualWeight": 6.2
@@ -173,7 +162,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ```
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -183,17 +171,16 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
       "_id": "pickup_id",
       "status": "completed",
       "actualWeight": 6.2,
-      "pointsEarned": 6,
+      "greenPointsEarned": 6,
       "completedAt": "2024-01-15T09:30:00.000Z"
     },
     "pointsEarned": 6,
-    "totalPoints": 156
+    "totalGreenPoints": 156
   }
 }
 ```
 
 **What happens:**
-
 - Pickup status changes to "completed"
 - Actual weight is recorded
 - Green points are calculated (1 point per kg)
@@ -209,7 +196,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `GET /api/activities/dashboard`
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -256,7 +242,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `GET /api/activities`
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -282,7 +267,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 **Endpoint:** `GET /api/activities/pickup-history`
 
 **Response:**
-
 ```json
 {
   "success": true,
@@ -312,22 +296,18 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ## Email Notifications
 
 ### 1. Admin Notification (New Pickup Request)
-
 - Sent to admin when user submits pickup request
 - Includes user details, pickup details, and action required
 
 ### 2. User Approval Notification
-
 - Sent to user when admin approves pickup request
 - Includes pickup details and next steps
 
 ### 3. User Rejection Notification
-
 - Sent to user when admin rejects pickup request
 - Includes rejection reason and suggestions
 
 ### 4. User Completion Notification
-
 - Sent to user when pickup is completed
 - Includes actual weight, points earned, and impact summary
 
@@ -367,7 +347,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ## API Endpoints Summary
 
 ### User Endpoints
-
 - `POST /api/pickups` - Submit pickup request
 - `GET /api/pickups/my-pickups` - Get user's pickup requests
 - `GET /api/pickups/:id` - Get specific pickup request
@@ -379,7 +358,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 - `PUT /api/activities/mark-read` - Mark activities as read
 
 ### Admin Endpoints
-
 - `GET /api/pickups` - Get all pickup requests
 - `GET /api/pickups/pending` - Get pending pickup requests
 - `GET /api/pickups/stats` - Get pickup statistics
@@ -399,7 +377,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 ## Database Models
 
 ### Pickup Model
-
 - User reference
 - Pickup details (date, time, address, waste type, weight)
 - Status tracking
@@ -407,7 +384,6 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 - Green points calculation
 
 ### Activity Model
-
 - User reference
 - Activity type and metadata
 - Points earned
@@ -415,8 +391,7 @@ The Transformer Cycle Hub pickup system implements a complete workflow for waste
 - Timestamps
 
 ### User Model
-
 - Profile information
 - Green points balance
 - Role-based access control
-- Activity tracking
+- Activity tracking 

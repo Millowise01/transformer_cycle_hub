@@ -1,4 +1,4 @@
-# transformer_cycle_hub
+# Transformer Cycle Hub
 
 A modern React-based web application for promoting sustainable waste management and recycling practices. Transform your waste into valuable resources while earning rewards and contributing to a greener planet.
 
@@ -15,8 +15,8 @@ A modern React-based web application for promoting sustainable waste management 
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [API Documentation](#api-documentation)
-- [Environment Setup](#-environment-setup)
-- [Deployment](#deployment)
+- [Environment Setup](#environment-setup)
+- [Deployment](#-deployment)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -157,10 +157,10 @@ transformer-cycle-hub-react/
 
 4. **Set up environment variables**
 
-   - **Backend**: In the `backend` directory, copy `.env.example` to a new file named `.env`.
-   - **Frontend**: In the root directory, create a `.env` file.
-
-   See the **Environment Setup** section below for details on the required variables.
+   ```bash
+   # Create .env file in backend directory
+   cp backend/.env.example backend/.env
+   ```
 
 5. **Configure environment variables**
 
@@ -196,7 +196,7 @@ transformer-cycle-hub-react/
 
 ## API Documentation
 
-For a detailed list of all endpoints, please see the `backend/README.md` file.
+### Authentication Endpoints
 
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
@@ -206,22 +206,50 @@ For a detailed list of all endpoints, please see the `backend/README.md` file.
 ### User Management
 
 - `GET /api/users` - Get all users
+- `GET /api/users/:id` - Get user by ID
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
 
 ### Pickup Services
 
 - `GET /api/pickups` - Get all pickups
 - `POST /api/pickups` - Create pickup request
+- `PUT /api/pickups/:id` - Update pickup
+- `DELETE /api/pickups/:id` - Cancel pickup
 
-## 🔧 Environment Setup
+### Recycling Centers
 
-### Backend (`backend/.env`)
+- `GET /api/recycling-centers` - Get all centers
+- `POST /api/recycling-centers` - Add new center
+- `PUT /api/recycling-centers/:id` - Update center
+- `DELETE /api/recycling-centers/:id` - Remove center
+
+### Tutorials & Education
+
+- `GET /api/tutorials` - Get all tutorials
+- `POST /api/tutorials` - Create tutorial
+- `PUT /api/tutorials/:id` - Update tutorial
+- `DELETE /api/tutorials/:id` - Delete tutorial
+
+### Rewards System
+
+- `GET /api/rewards` - Get all rewards
+- `POST /api/rewards` - Create reward
+- `PUT /api/rewards/:id` - Update reward
+- `DELETE /api/rewards/:id` - Delete reward
+
+## Environment Setup
+
+### Required Environment Variables
+
+#### Backend (.env)
 
 ```env
 # Server Configuration
 PORT=3005
 NODE_ENV=development
 
-# MongoDB Database
+# Database
 MONGODB_URI=mongodb://localhost:27017/transformer-cycle-hub
 
 # Authentication
@@ -229,9 +257,11 @@ JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRE=7d
 
 # Email Configuration
-EMAIL_SERVICE=gmail
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
+
 # CORS
 CORS_ORIGIN=http://localhost:3000
 
@@ -262,41 +292,69 @@ REACT_APP_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 3. **Initialize Collections**
    The application will automatically create collections when first used.
 
-## Deployment
+## 🚀 Deployment
 
-This project is optimized for deployment on **Vercel**. You should deploy the frontend and backend as two separate projects from the same repository.
+### Frontend Deployment (Vercel/Netlify)
 
-### 1. Deploying the Backend
+1. **Build the application**
 
-1. Create a new project on Vercel and link it to your GitHub repository.
-2. When configuring the project, set the **Root Directory** to `backend`.
-3. Vercel will automatically detect it as a Node.js project.
-4. Go to **Settings -> Environment Variables** and add the production variables for the backend:
-    - `MONGODB_URI`: Your production MongoDB Atlas connection string.
-    - `JWT_SECRET`: A new, strong, randomly generated secret key.
-    - `CORS_ORIGIN`: **Leave this blank for now.** You will add it after deploying the frontend.
-    - `NODE_ENV`: `production`
-    - `EMAIL_USER`, `EMAIL_PASS`, etc. for your email service.
-5. Deploy the project. Once deployed, note the public URL (e.g., `https://your-backend-app.vercel.app`).
+   ```bash
+   npm run build
+   ```
 
-### 2. Deploying the Frontend
+2. **Deploy to Vercel**
 
-1. Create another new project on Vercel from the same repository.
-2. Set the **Root Directory** to `./` (the root of the repository).
-3. Vercel will detect it as a Create React App project.
-4. Go to **Settings -> Environment Variables** and add the required variables:
-    - `REACT_APP_API_URL`: The full URL of your **deployed backend API** (e.g., `https://your-backend-app.vercel.app/api`).
-    - `REACT_APP_GOOGLE_MAPS_API_KEY`: Your Google Maps API key.
-5. Deploy the project. Note its public URL (e.g., `https://your-frontend-app.vercel.app`).
+   ```bash
+   npm install -g vercel
+   vercel
+   ```
 
-### 3. Final Configuration (Crucial Step)
+3. **Deploy to Netlify**
+   - Connect your GitHub repository
+   - Set build command: `npm run build`
+   - Set publish directory: `build`
 
-1. Go back to your **backend project's settings** on Vercel.
-2. Navigate to **Environment Variables**.
-3. Edit the `CORS_ORIGIN` variable and set its value to your **frontend's public URL** (e.g., `https://your-frontend-app.vercel.app`).
-4. Trigger a new deployment for the backend project to apply the new environment variable.
+### Backend Deployment (Heroku/Railway)
 
-After the backend redeploys, your application should be fully functional, and sign-up/login will work correctly.
+1. **Prepare for deployment**
+
+   ```bash
+   cd backend
+   npm install
+   ```
+
+2. **Set environment variables**
+   - Configure all required environment variables
+   - Set `NODE_ENV=production`
+
+3. **Deploy to Heroku**
+
+   ```bash
+   heroku create your-app-name
+   git push heroku main
+   ```
+
+### Docker Deployment
+
+1. **Create Dockerfile**
+
+   ```dockerfile
+   FROM node:18-alpine
+   WORKDIR /app
+   COPY package*.json ./
+   RUN npm install
+   COPY . .
+   RUN npm run build
+   EXPOSE 3000
+   CMD ["npm", "start"]
+   ```
+
+2. **Build and run**
+
+   ```bash
+   docker build -t transformer-cycle-hub .
+   docker run -p 3000:3000 transformer-cycle-hub
+   ```
 
 ## Contributing
 

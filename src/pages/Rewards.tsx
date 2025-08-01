@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
-import axios from 'axios';
+
 import { FaGift, FaStar, FaTimes, FaFilter, FaSearch } from 'react-icons/fa';
+import { rewardsAPI } from '../services/api';
 import './Rewards.css';
 
 interface Reward {
@@ -55,7 +55,7 @@ const Rewards: React.FC = () => {
 
   const fetchRewards = async () => {
     try {
-      const response = await api.get('/rewards');
+      const response = await rewardsAPI.getAll();
       if (response.data.success) {
         setRewards(response.data.data);
       }
@@ -65,31 +65,28 @@ const Rewards: React.FC = () => {
       setLoading(false);
     }
   };
+
   const fetchUserRewards = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          console.log('No access token found for rewards');
-          return;
-        }
-  
-        console.log('Fetching user rewards with token:', token.substring(0, 20) + '...');
-  
-        const response = await axios.get('/api/rewards/my-rewards', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-  
-        console.log('Rewards response:', response.data);
-  
-        if (response.data.success) {
-          setPointsBalance(response.data.data.pointsBalance);
-          setUserRewards(response.data.data.rewards);
-        }
-      } catch (error: any) {
-        console.error('Error fetching user rewards:', error.response?.data || error.message);
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('No access token found for rewards');
+        return;
       }
+
+      console.log('Fetching user rewards with token:', token.substring(0, 20) + '...');
+
+      const response = await rewardsAPI.getMyRewards();
+
+      console.log('Rewards response:', response.data);
+
+      if (response.data.success) {
+        setPointsBalance(response.data.data.pointsBalance);
+        setUserRewards(response.data.data.rewards);
+      }
+    } catch (error: any) {
+      console.error('Error fetching user rewards:', error.response?.data || error.message);
+    }
   };
 
   const handleRedeem = async () => {
@@ -100,13 +97,7 @@ const Rewards: React.FC = () => {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const response = await axios.post(`/api/rewards/${selectedReward._id}/redeem`, {
-        deliveryDetails
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await rewardsAPI.redeemReward(selectedReward._id, deliveryDetails);
 
       if (response.data.success) {
         alert('🎉 Reward redeemed successfully! Check your email for confirmation.');
@@ -132,6 +123,15 @@ const Rewards: React.FC = () => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return '#ff9800';
+      case 'approved': return '#4caf50';
+      case 'delivered': return '#2196f3';
+      case 'cancelled': return '#f44336';
+      default: return '#666';
+    }
+  };
 
   const filteredRewards = rewards.filter(reward => {
     const matchesSearch = reward.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -151,7 +151,7 @@ const Rewards: React.FC = () => {
   return (
     <div className="rewards-page">
       <div className="rewards-header">
-        <h1>Rewards Center</h1>
+        <h1>🎁 Rewards Center</h1>
         <p>Redeem your green points for amazing eco-friendly rewards!</p>
       </div>
 
@@ -168,7 +168,7 @@ const Rewards: React.FC = () => {
             onClick={fetchUserRewards}
             title="Refresh points balance"
           >
-            
+            🔄
           </button>
         </div>
       </div>
@@ -188,10 +188,12 @@ const Rewards: React.FC = () => {
         <div className="filter-controls">
           <div className="filter-group">
             <FaFilter className="filter-icon" />
+            <label htmlFor="category-select" className="visually-hidden">Filter by category</label>
             <select
+              id="category-select"
+              title="Filter by category"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              aria-label="Filter rewards by category"
             >
               {categories.map(category => (
                 <option key={category.value} value={category.value}>
@@ -268,7 +270,7 @@ const Rewards: React.FC = () => {
                     {new Date(userReward.redeemedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className={`status-badge status-badge--${userReward.status}`}>
+                <div className={`status-badge status-${userReward.status}`}>
                   {userReward.status}
                 </div>
               </div>
@@ -287,6 +289,7 @@ const Rewards: React.FC = () => {
                 className="close-btn"
                 onClick={() => setShowRedeemModal(false)}
                 title="Close"
+                aria-label="Close"
               >
                 <FaTimes />
               </button>

@@ -12,6 +12,27 @@ const router = express.Router();
 // @access  Public
 router.get('/', async (req, res) => {
   try {
+    console.log('Fetching tutorials...');
+    
+    // Check if database is connected
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.log('Database not connected, attempting to connect...');
+      try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        });
+      } catch (dbError) {
+        console.error('Database connection failed:', dbError);
+        return res.status(500).json({
+          success: false,
+          message: 'Database connection failed',
+          error: process.env.NODE_ENV === 'development' ? dbError.message : 'Internal server error'
+        });
+      }
+    }
+
     const { category, difficulty, search } = req.query;
     
     let query = { isActive: true };
@@ -32,6 +53,7 @@ router.get('/', async (req, res) => {
     }
     
     const tutorials = await Tutorial.find(query).sort({ createdAt: -1 });
+    console.log(`Found ${tutorials.length} tutorials`);
     
     res.json({
       success: true,
@@ -80,9 +102,32 @@ router.get('/:id', async (req, res) => {
 // @access  Private
 router.get('/progress', protect, async (req, res) => {
   try {
+    console.log('Fetching user tutorial progress...');
+    
+    // Check if database is connected
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      console.log('Database not connected, attempting to connect...');
+      try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        });
+      } catch (dbError) {
+        console.error('Database connection failed:', dbError);
+        return res.status(500).json({
+          success: false,
+          message: 'Database connection failed',
+          error: process.env.NODE_ENV === 'development' ? dbError.message : 'Internal server error'
+        });
+      }
+    }
+
     const userTutorials = await UserTutorial.find({ user: req.user.id })
       .populate('tutorial')
       .sort({ updatedAt: -1 });
+    
+    console.log(`Found ${userTutorials.length} user tutorials`);
     
     res.json({
       success: true,
@@ -122,24 +167,51 @@ router.put('/:id/progress', protect, async (req, res) => {
     
     // Update progress
     if (progress !== undefined) {
-      await userTutorial.updateProgress(progress);
+      try {
+        await userTutorial.updateProgress(progress);
+      } catch (error) {
+        console.error('Error updating progress:', error);
+        // Fallback: update directly
+        userTutorial.watchProgress = Math.min(progress, 100);
+        userTutorial.lastWatchedAt = new Date();
+        await userTutorial.save();
+      }
     }
     
     // Mark as completed if requested
     if (completed && !userTutorial.isCompleted) {
-      const wasCompleted = await userTutorial.completeTutorial();
-      
-      if (wasCompleted) {
+      try {
+        const wasCompleted = await userTutorial.completeTutorial();
+        
+        if (wasCompleted) {
+          // Update user points
+          await User.findByIdAndUpdate(userId, {
+            $inc: { points: 10 }
+          });
+          
+          // Send completion email
+          const tutorial = await Tutorial.findById(tutorialId);
+          if (tutorial) {
+            try {
+              await sendTutorialCompletionEmail(req.user.email, req.user.firstName, tutorial.title);
+            } catch (emailError) {
+              console.error('Email sending failed:', emailError);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error completing tutorial:', error);
+        // Fallback: complete manually
+        userTutorial.isCompleted = true;
+        userTutorial.completedAt = new Date();
+        userTutorial.pointsEarned = 10;
+        userTutorial.watchProgress = 100;
+        await userTutorial.save();
+        
         // Update user points
         await User.findByIdAndUpdate(userId, {
           $inc: { points: 10 }
         });
-        
-        // Send completion email
-        const tutorial = await Tutorial.findById(tutorialId);
-        if (tutorial) {
-          await sendTutorialCompletionEmail(req.user.email, req.user.firstName, tutorial.title);
-        }
       }
     }
     

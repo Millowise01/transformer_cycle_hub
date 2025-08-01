@@ -12,33 +12,40 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import { isAuthenticated, isAdmin } from './utils/auth';
 import './App.css';
 
-// Authentication check
-const isAuthenticated = () => {
-  return Boolean(localStorage.getItem('accessToken'));
-};
-
-// Admin role check
-const isAdmin = () => {
-  const userData = localStorage.getItem('userData');
-  try {
-    const user = userData ? JSON.parse(userData) : null;
-    return user?.role === 'admin';
-  } catch {
-    return false;
-  }
-};
-
-// Protected user route
+// Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />;
+  const auth = isAuthenticated();
+  console.log('ProtectedRoute check:', { auth });
+  
+  if (!auth) {
+    console.log('Not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
 };
 
-// Protected admin route
+// Admin Route Component
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  if (!isAuthenticated()) return <Navigate to="/login" replace />;
-  if (!isAdmin()) return <Navigate to="/dashboard" replace />;
+  const auth = isAuthenticated();
+  const admin = isAdmin();
+  
+  console.log('AdminRoute check:', { auth, admin });
+  
+  if (!auth) {
+    console.log('Not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!admin) {
+    console.log('Not admin, redirecting to dashboard');
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  console.log('Admin access granted');
   return <>{children}</>;
 };
 
@@ -67,4 +74,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 

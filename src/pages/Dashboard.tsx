@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaChartBar, FaRecycle, FaTrophy, FaCalendarAlt, FaArrowRight, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import api from '../api';
+import { pickupsAPI, rewardsAPI } from '../services/api';
 import './Dashboard.css';
 
 interface Pickup {
@@ -26,17 +26,18 @@ const Dashboard: React.FC = () => {
     totalWeight: 0
   });
 
-  // Function to refresh all data (called after earning points)
-  const refreshDashboard = React.useCallback(() => {
-    fetchUserPickups();
-    fetchUserPoints();
-  }, []);
-
   useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.log('No authentication token found, skipping dashboard data fetch');
+      setLoading(false);
+      return;
+    }
+
     fetchUserData();
     fetchUserPickups();
     fetchUserPoints();
-  }, [refreshDashboard]);
+  }, []);
 
   const fetchUserData = () => {
     const userDataStr = localStorage.getItem('userData');
@@ -52,7 +53,13 @@ const Dashboard: React.FC = () => {
 
   const fetchUserPickups = async () => {
     try {
-      const response = await api.get('/pickups/my-pickups');
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('No access token found for pickups');
+        return;
+      }
+
+      const response = await pickupsAPI.getMyPickups();
 
       if (response.data.success) {
         setPickups(response.data.data);
@@ -67,9 +74,13 @@ const Dashboard: React.FC = () => {
           totalPoints,
           totalWeight
         });
+      } else {
+        console.log('Pickups response not successful:', response.data);
       }
-    } catch (error) {
-      console.error('Error fetching pickups:', error);
+    } catch (error: any) {
+      console.error('Error fetching pickups:', error.response?.data || error.message);
+      // Don't crash the page, just show empty data
+      setPickups([]);
     } finally {
       setLoading(false);
     }
@@ -77,9 +88,16 @@ const Dashboard: React.FC = () => {
 
   const fetchUserPoints = async () => {
     try {
-      // The token is now added automatically by the interceptor
-      const response = await api.get('/rewards/my-rewards');
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('No access token found for points');
+        return;
+      }
+
+      console.log('Fetching user points with token:', token.substring(0, 20) + '...');
       
+      const response = await rewardsAPI.getMyRewards();
+
       console.log('Points response:', response.data);
 
       if (response.data.success) {
@@ -87,23 +105,27 @@ const Dashboard: React.FC = () => {
           ...prevStats,
           totalPoints: response.data.data.pointsBalance
         }));
+      } else {
+        console.log('Points response not successful:', response.data);
       }
     } catch (error: any) {
       console.error('Error fetching user points:', error.response?.data || error.message);
+      // Don't crash the page, just keep current points
     }
   };
 
   // Listen for tutorial completion events
   useEffect(() => {
     const handleTutorialComplete = () => {
-      refreshDashboard();
+      fetchUserPickups();
+      fetchUserPoints();
     };
 
     window.addEventListener('tutorialCompleted', handleTutorialComplete);
     return () => {
       window.removeEventListener('tutorialCompleted', handleTutorialComplete);
     };
-  }, [refreshDashboard]);
+  }, []);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -149,9 +171,9 @@ const Dashboard: React.FC = () => {
           <span className="points-value">{stats.totalPoints}</span>
           <button 
             onClick={fetchUserPoints}
-            className="refresh-points-btn"
+            className="refresh-btn"
           >
-            Refresh
+            🔄 Refresh
           </button>
         </div>
       </div>

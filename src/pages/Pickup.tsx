@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaRecycle, FaCalendar, FaMapMarkerAlt } from 'react-icons/fa';
-import api from '../api';
+import { pickupsAPI } from '../services/api';
 import './Pickup.css';
 
 const Pickup: React.FC = () => {
@@ -28,13 +28,15 @@ const Pickup: React.FC = () => {
     setSubmitMessage('');
 
     try {
-      // The API client now automatically adds the token.
-      // We just need to check if the user is logged in.
-      if (!localStorage.getItem('accessToken')) {
+      // Get auth token
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
         setSubmitMessage('Please login to submit a pickup request.');
         return;
       }
-      const response = await api.post('/pickups', formData);
+
+      const response = await pickupsAPI.create(formData);
 
       if (response.data.success) {
         setSubmitMessage('Pickup scheduled successfully! You will receive a confirmation email shortly.');

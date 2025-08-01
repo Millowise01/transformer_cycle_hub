@@ -1,20 +1,20 @@
 # Email Setup Guide for Contact Form
 
-## 📧 Email Functionality Overview
+## Email Functionality Overview
 
 The contact form now sends **two emails** when someone submits a message:
 
 1. **Admin Notification Email** → Sent to `l.carew@alustudent.com`
 2. **User Confirmation Email** → Sent to the person who submitted the form
 
-## 🔧 Email Setup Instructions
+## Email Setup Instructions
 
 ### **Step 1: Gmail App Password Setup**
 
 Since you're using Gmail, you need to create an "App Password":
 
 1. **Go to your Google Account settings**
-   - Visit: https://myaccount.google.com/
+   - Visit: <https://myaccount.google.com/>
    - Click "Security"
 
 2. **Enable 2-Step Verification** (if not already enabled)
@@ -41,34 +41,38 @@ ADMIN_EMAIL=l.carew@alustudent.com
 ```
 
 **Replace:**
+
 - `your_gmail@gmail.com` with your actual Gmail address
 - `your_16_character_app_password` with the app password you generated
 
 ### **Step 3: Test the Email Functionality**
 
 1. **Restart your backend server:**
+
    ```bash
    cd backend
    npm start
    ```
 
 2. **Test the contact form:**
-   - Go to http://localhost:3000/contact
+   - Go to <http://localhost:3000/contact>
    - Fill out the form with your email
    - Submit the form
-   - Check both your email and l.carew@alustudent.com
+   - Check both your email and <l.carew@alustudent.com>
 
-## 📬 Email Templates
+## Email Templates
 
 ### **Admin Notification Email**
+
 - **Subject**: "New Contact Form Submission - [Subject]"
-- **Content**: 
+- **Content**:
   - Sender name and email
   - Subject and message
   - Submission timestamp
   - Professional formatting
 
 ### **User Confirmation Email**
+
 - **Subject**: "Thank you for contacting Transformer Cycle Hub"
 - **Content**:
   - Personalized greeting
@@ -76,12 +80,12 @@ ADMIN_EMAIL=l.carew@alustudent.com
   - Contact information
   - Professional branding
 
-## 🛠️ Alternative Email Services
+## Alternative Email Services
 
 ### **Option A: SendGrid (Recommended for Production)**
 
 1. **Sign up for SendGrid**
-   - Go to https://sendgrid.com/
+   - Go to <https://sendgrid.com/>
    - Create a free account (100 emails/day)
 
 2. **Get API Key**
@@ -90,6 +94,7 @@ ADMIN_EMAIL=l.carew@alustudent.com
    - Copy the key
 
 3. **Update Configuration**
+
    ```env
    EMAIL_SERVICE=sendgrid
    EMAIL_API_KEY=your_sendgrid_api_key
@@ -99,7 +104,7 @@ ADMIN_EMAIL=l.carew@alustudent.com
 ### **Option B: Mailgun**
 
 1. **Sign up for Mailgun**
-   - Go to https://www.mailgun.com/
+   - Go to <https://www.mailgun.com/>
    - Create a free account
 
 2. **Get API Key**
@@ -107,6 +112,7 @@ ADMIN_EMAIL=l.carew@alustudent.com
    - Copy the API key
 
 3. **Update Configuration**
+
    ```env
    EMAIL_SERVICE=mailgun
    EMAIL_API_KEY=your_mailgun_api_key
@@ -114,7 +120,7 @@ ADMIN_EMAIL=l.carew@alustudent.com
    EMAIL_FROM=noreply@your_domain.com
    ```
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### **Common Issues**
 
@@ -152,7 +158,7 @@ sendContactForm({
 "
 ```
 
-## 📊 Email Analytics (Future Enhancement)
+## Email Analytics (Future Enhancement)
 
 For production, consider adding:
 
@@ -161,7 +167,7 @@ For production, consider adding:
 3. **Bounce handling**
 4. **Spam score monitoring**
 
-## 🔒 Security Best Practices
+## Security Best Practices
 
 1. **Never commit email passwords to git**
 2. **Use environment variables**
@@ -169,9 +175,10 @@ For production, consider adding:
 4. **Rate limit email sending**
 5. **Validate email addresses**
 
-## 🚀 Production Deployment
+## Production Deployment
 
 ### **Environment Variables**
+
 Set these in your production environment:
 
 ```env
@@ -184,13 +191,15 @@ NODE_ENV=production
 ```
 
 ### **Email Service Recommendations**
+
 - **Development**: Gmail (free)
 - **Production**: SendGrid, Mailgun, or AWS SES
 
-## 📞 Support
+## Support
 
 If you encounter issues:
+
 1. Check the troubleshooting section
 2. Verify your email configuration
 3. Test with a simple email first
-4. Check server logs for detailed error messages 
+4. Check server logs for detailed error messages

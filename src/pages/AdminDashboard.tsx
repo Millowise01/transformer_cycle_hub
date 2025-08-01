@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaUsers, FaRecycle, FaChartBar, FaCog } from 'react-icons/fa';
-import api from '../api';
+import { FaUsers, FaRecycle, FaChartBar, FaCog, FaCheck, FaTimes } from 'react-icons/fa';
+import { pickupsAPI, usersAPI } from '../services/api';
 import './AdminDashboard.css';
 
 interface Pickup {
   _id: string;
-  user: {
+  user?: {
     firstName: string;
     lastName: string;
     email: string;
@@ -24,6 +24,7 @@ interface Pickup {
 const AdminDashboard: React.FC = () => {
   const [pickups, setPickups] = useState<Pickup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalUsers: 0,
     pendingPickups: 0,
@@ -35,24 +36,39 @@ const AdminDashboard: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPickups();
-    fetchStats();
+    console.log('AdminDashboard mounted');
+    try {
+      fetchPickups();
+      fetchStats();
+    } catch (error) {
+      console.error('Error in AdminDashboard useEffect:', error);
+      setError('Failed to load admin dashboard');
+    }
   }, []);
 
   const fetchPickups = async () => {
     try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('No access token found for pickups');
+        return;
+      }
+
+      console.log('Fetching admin pickups...');
+
       // Fetch all pickups, not just pending ones
-      const response = await api.get('/pickups', {
-        params: {
-          limit: 50 // Get more pickups
-        }
-      });
+      const response = await pickupsAPI.getAll();
+      console.log('Pickups response:', response.data);
 
       if (response.data.success) {
-        setPickups(response.data.data.pickups || response.data.data);
+        setPickups(response.data.data.pickups || response.data.data || []);
+      } else {
+        console.log('Pickups response not successful:', response.data);
+        setPickups([]);
       }
     } catch (error) {
       console.error('Error fetching pickups:', error);
+      setPickups([]);
     } finally {
       setLoading(false);
     }
@@ -60,33 +76,58 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('No access token found for stats');
+        return;
+      }
+
+      console.log('Fetching admin stats...');
+
       // Fetch pickup stats
-      const pickupResponse = await api.get('/api/pickups/stats');
+      const pickupResponse = await pickupsAPI.getStats();
+      console.log('Pickup stats response:', pickupResponse.data);
 
       // Fetch user stats
-      // Assuming a /users/stats endpoint exists and is protected
-      const userResponse = await api.get('/api/users/stats');
+      const userResponse = await usersAPI.getStats();
+      console.log('User stats response:', userResponse.data);
 
       if (pickupResponse.data.success && userResponse.data.success) {
         const pickupStats = pickupResponse.data.data;
         const userStats = userResponse.data.data;
         
         setStats({
-          totalUsers: userStats.totalUsers,
-          pendingPickups: pickupStats.byStatus.find((s: any) => s._id === 'pending')?.count || 0,
-          totalWeight: pickupStats.totalWeight,
+          totalUsers: userStats.totalUsers || 0,
+          pendingPickups: pickupStats.byStatus?.find((s: any) => s._id === 'pending')?.count || 0,
+          totalWeight: pickupStats.totalWeight || 0,
+          activeCenters: 25
+        });
+      } else {
+        console.log('Stats responses not successful:', { pickupResponse, userResponse });
+        // Set default stats if API calls fail
+        setStats({
+          totalUsers: 0,
+          pendingPickups: 0,
+          totalWeight: 0,
           activeCenters: 25
         });
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // Set default stats on error
+      setStats({
+        totalUsers: 0,
+        pendingPickups: 0,
+        totalWeight: 0,
+        activeCenters: 25
+      });
     }
   };
 
   const handleApprove = async (pickupId: string) => {
     setActionLoading(pickupId);
     try {
-      const response = await api.put(`/pickups/${pickupId}/approve`, { adminNotes });
+      const response = await pickupsAPI.approve(pickupId, { adminNotes });
 
       if (response.data.success) {
         alert('Pickup approved successfully!');
@@ -110,7 +151,7 @@ const AdminDashboard: React.FC = () => {
 
     setActionLoading(pickupId);
     try {
-      const response = await api.put(`/pickups/${pickupId}/reject`, { adminNotes });
+      const response = await pickupsAPI.reject(pickupId, { adminNotes });
 
       if (response.data.success) {
         alert('Pickup rejected successfully!');
@@ -130,11 +171,37 @@ const AdminDashboard: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  if (error) {
+    return (
+      <div className="admin-dashboard">
+        <div className="admin-header card">
+          <h1>Admin Dashboard</h1>
+          <p className="error-message">Error: {error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="admin-dashboard">
+        <div className="admin-header card">
+          <h1>Admin Dashboard</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('AdminDashboard rendering with:', { loading, error, stats, pickups: pickups.length });
+
   return (
     <div className="admin-dashboard">
       <div className="admin-header card">
         <h1>Admin Dashboard</h1>
         <p>Manage the Transformer Cycle Hub platform</p>
+        <p>Debug: {loading ? 'Loading' : 'Loaded'} | {error ? 'Error' : 'No Error'}</p>
       </div>
       
       <div className="admin-stats">
@@ -164,7 +231,7 @@ const AdminDashboard: React.FC = () => {
           </div>
           <div className="stat-info">
             <h3>Waste Processed</h3>
-            <p className="stat-number">{stats.totalWeight.toFixed(1)} kg</p>
+            <p className="stat-number">{stats.totalWeight.toFixed(1)} tons</p>
           </div>
         </div>
         
@@ -190,16 +257,36 @@ const AdminDashboard: React.FC = () => {
             </div>
           ) : (
           <div className="pickup-list">
-              {pickups.map((pickup) => (
-                <div key={pickup._id} className={`pickup-item ${pickup.status}`} onClick={() => setSelectedPickup(pickup)}>
-                  <div className="pickup-info">
+              {pickups.filter(pickup => pickup.user).map((pickup) => (
+                <div key={pickup._id} className={`pickup-item ${pickup.status}`}>
+                  <div className="pickup-header">
+              <div className="pickup-info">
                       <h4>{pickup.wasteType.charAt(0).toUpperCase() + pickup.wasteType.slice(1)} Waste</h4>
-                      <p><strong>User:</strong> {pickup.user.firstName} {pickup.user.lastName}</p>
+                      <p><strong>User:</strong> {pickup.user ? `${pickup.user.firstName} ${pickup.user.lastName}` : 'Unknown User'}</p>
                       <p><strong>Quantity:</strong> {pickup.quantity}kg • <strong>Date:</strong> {formatDate(pickup.pickupDate)} • <strong>Time:</strong> {pickup.pickupTime}</p>
                       <p><strong>Address:</strong> {pickup.address}</p>
+                      <p><strong>Status:</strong> <span className={`status-badge ${pickup.status}`}>{pickup.status.toUpperCase()}</span></p>
                       {pickup.notes && <p><strong>Notes:</strong> {pickup.notes}</p>}
+              </div>
+                    {pickup.status === 'pending' && (
+              <div className="pickup-actions">
+                        <button 
+                          className="btn approve-btn"
+                          onClick={() => handleApprove(pickup._id)}
+                          disabled={actionLoading === pickup._id}
+                        >
+                          {actionLoading === pickup._id ? 'Approving...' : <><FaCheck /> Approve</>}
+                        </button>
+                        <button 
+                          className="btn reject-btn"
+                          onClick={() => handleReject(pickup._id)}
+                          disabled={actionLoading === pickup._id}
+                        >
+                          {actionLoading === pickup._id ? 'Rejecting...' : <><FaTimes /> Reject</>}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <span className={`status-badge ${pickup.status}`}>{pickup.status}</span>
               </div>
               ))}
             </div>
@@ -211,9 +298,9 @@ const AdminDashboard: React.FC = () => {
             <div className="modal-content">
               <h3>Pickup Details</h3>
               <div className="details-content">
-                <p><strong>User:</strong> {selectedPickup.user.firstName} {selectedPickup.user.lastName}</p>
-                <p><strong>Email:</strong> {selectedPickup.user.email}</p>
-                <p><strong>Phone:</strong> {selectedPickup.user.phone}</p>
+                <p><strong>User:</strong> {selectedPickup.user ? `${selectedPickup.user.firstName} ${selectedPickup.user.lastName}` : 'Unknown User'}</p>
+                <p><strong>Email:</strong> {selectedPickup.user ? selectedPickup.user.email : 'N/A'}</p>
+                <p><strong>Phone:</strong> {selectedPickup.user ? selectedPickup.user.phone : 'N/A'}</p>
                 <p><strong>Waste Type:</strong> {selectedPickup.wasteType}</p>
                 <p><strong>Quantity:</strong> {selectedPickup.quantity}kg</p>
                 <p><strong>Pickup Date:</strong> {formatDate(selectedPickup.pickupDate)}</p>
@@ -239,7 +326,7 @@ const AdminDashboard: React.FC = () => {
                   <button 
                     className="btn reject-btn"
                     onClick={() => handleReject(selectedPickup._id)}
-                    disabled={actionLoading === selectedPickup._id || !adminNotes.trim()}
+                    disabled={actionLoading === selectedPickup._id}
                   >
                     {actionLoading === selectedPickup._id ? 'Rejecting...' : 'Reject'}
                   </button>

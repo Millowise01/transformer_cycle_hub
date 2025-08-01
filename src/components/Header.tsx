@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa';
+import { isAuthenticated as checkAuth, isAdmin, getUserData, logout } from '../utils/auth';
 import './Header.css';
 
 const Header: React.FC = () => {
@@ -12,19 +13,37 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     // Check authentication status and user role
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    const userData = localStorage.getItem('userData');
-    
-    setIsAuthenticated(authStatus);
-    
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        setUserRole(user.role || 'user');
-      } catch (error) {
-        setUserRole('user');
+    const updateAuthState = () => {
+      const auth = checkAuth();
+      const userData = getUserData();
+      
+      setIsAuthenticated(!!auth);
+      setUserRole(userData?.role || 'user');
+    };
+
+    // Check on mount
+    updateAuthState();
+
+    // Listen for storage changes (only when localStorage changes in other tabs)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'isAuthenticated' || e.key === 'userData' || e.key === 'accessToken') {
+        updateAuthState();
       }
-    }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Check when window gains focus (user returns to tab)
+    const handleFocus = () => {
+      updateAuthState();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const toggleMenu = () => {
@@ -40,13 +59,9 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userData');
+    logout();
     setIsAuthenticated(false);
     setUserRole('');
-    navigate('/');
   };
 
   return (

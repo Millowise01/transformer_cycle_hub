@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaMapMarkerAlt, FaPhone, FaGlobe, FaStar, FaFilter, FaSearch, FaRecycle, FaLeaf } from 'react-icons/fa';
+import { recyclingCentersAPI } from '../services/api';
+import { FaMapMarkerAlt, FaPhone, FaGlobe, FaStar, FaFilter, FaSearch } from 'react-icons/fa';
 import './CommunityMap.css';
 
 interface RecyclingCenter {
@@ -36,16 +36,8 @@ const CommunityMap: React.FC = () => {
   const [filterService, setFilterService] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const fetchAndSetCenters = async () => {
-      await fetchCenters();
-    };
-    fetchAndSetCenters();
-    getUserLocation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchCenters = async () => {
+  // Move fetchCenters to component scope so it can be used elsewhere
+  const fetchCenters = React.useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (filterType) params.append('type', filterType);
@@ -56,7 +48,7 @@ const CommunityMap: React.FC = () => {
         params.append('radius', '10000'); // 10km radius
       }
 
-      const response = await axios.get(`/api/recycling-centers?${params.toString()}`);
+      const response = await recyclingCentersAPI.getAll();
       if (response.data.success) {
         setCenters(response.data.data);
       }
@@ -65,7 +57,12 @@ const CommunityMap: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType, filterService, userLocation]);
+
+  useEffect(() => {
+    fetchCenters();
+    getUserLocation();
+  }, [fetchCenters]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -90,18 +87,18 @@ const CommunityMap: React.FC = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'recycling-center': return <FaRecycle />;
-      case 'eco-partner': return <FaGlobe />;
-      case 'drop-off-point': return <FaMapMarkerAlt />;
-      case 'composting-site': return <FaLeaf />;
-      default: return <FaMapMarkerAlt />;
+      case 'recycling-center': return '♻️';
+      case 'eco-partner': return '🤝';
+      case 'drop-off-point': return '📦';
+      case 'composting-site': return '🌱';
+      default: return '📍';
     }
   };
 
 
   const filteredCenters = centers.filter(center => {
     const matchesSearch = center.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         center.description.toLowerCase().includes(searchTerm.toLowerCase());
+                  center.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = !filterType || center.type === filterType;
     const matchesService = !filterService || center.services.includes(filterService);
     return matchesSearch && matchesType && matchesService;
@@ -150,9 +147,9 @@ const CommunityMap: React.FC = () => {
           <div className="filter-group">
             <FaFilter className="filter-icon" />
             <select
-              aria-label="Filter by center type"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
+              aria-label="Filter by type"
             >
               {centerTypes.map(type => (
                 <option key={type.value} value={type.value}>
@@ -164,9 +161,9 @@ const CommunityMap: React.FC = () => {
 
           <div className="filter-group">
             <select
-              aria-label="Filter by service type"
               value={filterService}
               onChange={(e) => setFilterService(e.target.value)}
+              aria-label="Filter by service"
             >
               {serviceTypes.map(service => (
                 <option key={service.value} value={service.value}>
@@ -203,7 +200,7 @@ const CommunityMap: React.FC = () => {
 
             {/* Centers List */}
             <div className="centers-list">
-              <h3>Nearby Centers ({filteredCenters.length})</h3>
+              <h3>📍 Nearby Centers ({filteredCenters.length})</h3>
               
               {filteredCenters.length === 0 ? (
                 <div className="no-centers">

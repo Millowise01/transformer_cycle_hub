@@ -1,17 +1,17 @@
 # Authentication Flow
 
-## 🔐 Current Authentication Process
+## Current Authentication Process
 
 ### **1. User Registration (Sign Up)**
-```
-User fills registration form → 
-Backend validates data → 
-User account created → 
-Success message shown → 
+
+User fills registration form →
+Backend validates data →
+User account created →
+Success message shown →
 Redirect to Login page
-```
 
 **What happens:**
+
 - User enters: firstName, lastName, email, phone, password
 - Backend validates all fields
 - Account is created in database
@@ -19,15 +19,15 @@ Redirect to Login page
 - User is redirected to login page with success message
 
 ### **2. User Login (Sign In)**
-```
-User fills login form → 
-Backend validates credentials → 
-Tokens generated → 
-User data stored → 
+
+User fills login form →
+Backend validates credentials →
+Tokens generated →
+User data stored →
 Redirect to Dashboard
-```
 
 **What happens:**
+
 - User enters: email, password
 - Backend validates credentials
 - **Access token and refresh token generated**
@@ -35,14 +35,13 @@ Redirect to Dashboard
 - User redirected to dashboard
 
 ### **3. Protected Routes**
-```
-User accesses protected route → 
-Check for valid token → 
-Token valid: Allow access → 
-Token invalid: Redirect to login
-```
 
-## 🛡️ Security Benefits
+User accesses protected route →
+Check for valid token →
+Token valid: Allow access →
+Token invalid: Redirect to login
+
+## Security Benefits
 
 ### **Why Registration Doesn't Auto-Login**
 
@@ -57,9 +56,10 @@ Token invalid: Redirect to login
 - **Refresh Token**: Long-lived (30 days) for getting new access tokens
 - **Secure Storage**: Tokens stored in localStorage (development) or httpOnly cookies (production)
 
-## 📱 User Experience Flow
+## User Experience Flow
 
 ### **New User Journey**
+
 1. **Visit Sign Up page**
 2. **Fill registration form**
 3. **See success message**: "Account created successfully! Please sign in to continue."
@@ -69,13 +69,15 @@ Token invalid: Redirect to login
 7. **Access dashboard**
 
 ### **Returning User Journey**
+
 1. **Visit Login page**
 2. **Enter credentials**
 3. **Access dashboard directly**
 
-## 🔧 Technical Implementation
+## Technical Implementation
 
 ### **Registration Endpoint**
+
 ```javascript
 POST /api/auth/register
 {
@@ -97,6 +99,7 @@ Response:
 ```
 
 ### **Login Endpoint**
+
 ```javascript
 POST /api/auth/login
 {
@@ -116,48 +119,55 @@ Response:
 }
 ```
 
-## 🎯 Benefits of This Approach
+## Benefits of This Approach
 
 ### **Security**
-- ✅ No automatic login after registration
-- ✅ Clear separation of concerns
-- ✅ Proper token management
-- ✅ Validation at every step
+
+- No automatic login after registration
+- Clear separation of concerns
+- Proper token management
+- Validation at every step
 
 ### **User Experience**
-- ✅ Clear feedback messages
-- ✅ Smooth navigation flow
-- ✅ Consistent behavior
-- ✅ Professional authentication process
+
+- Clear feedback messages
+- Smooth navigation flow
+- Consistent behavior
+- Professional authentication process
 
 ### **Development**
-- ✅ Easy to add email verification later
-- ✅ Easy to add password reset functionality
-- ✅ Easy to add two-factor authentication
-- ✅ Scalable architecture
 
-## 🚀 Future Enhancements
+- Easy to add email verification later
+- Easy to add password reset functionality
+- Easy to add two-factor authentication
+- Scalable architecture
+
+## Future Enhancements
 
 ### **Email Verification**
+
 ```javascript
 // After registration, send verification email
 // User must verify email before first login
 ```
 
 ### **Password Reset**
+
 ```javascript
 // Add "Forgot Password" functionality
 // Send reset link via email
 ```
 
 ### **Two-Factor Authentication**
+
 ```javascript
 // Add 2FA for additional security
 // SMS or authenticator app
 ```
 
 ### **Social Login**
+
 ```javascript
 // Add Google, Facebook login options
 // OAuth integration
-``` 
+```
