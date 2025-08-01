@@ -123,15 +123,6 @@ const Rewards: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return '#ff9800';
-      case 'approved': return '#4caf50';
-      case 'delivered': return '#2196f3';
-      case 'cancelled': return '#f44336';
-      default: return '#666';
-    }
-  };
 
   const filteredRewards = rewards.filter(reward => {
     const matchesSearch = reward.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
