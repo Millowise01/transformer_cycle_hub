@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../api';
 import axios from 'axios';
 import { FaGift, FaStar, FaTimes, FaFilter, FaSearch } from 'react-icons/fa';
 import './Rewards.css';
@@ -54,7 +55,7 @@ const Rewards: React.FC = () => {
 
   const fetchRewards = async () => {
     try {
-      const response = await axios.get('/api/rewards');
+      const response = await api.get('/rewards');
       if (response.data.success) {
         setRewards(response.data.data);
       }
@@ -64,32 +65,31 @@ const Rewards: React.FC = () => {
       setLoading(false);
     }
   };
-
   const fetchUserRewards = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.log('No access token found for rewards');
-        return;
-      }
-
-      console.log('Fetching user rewards with token:', token.substring(0, 20) + '...');
-
-      const response = await axios.get('/api/rewards/my-rewards', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          console.log('No access token found for rewards');
+          return;
         }
-      });
-
-      console.log('Rewards response:', response.data);
-
-      if (response.data.success) {
-        setPointsBalance(response.data.data.pointsBalance);
-        setUserRewards(response.data.data.rewards);
+  
+        console.log('Fetching user rewards with token:', token.substring(0, 20) + '...');
+  
+        const response = await axios.get('/api/rewards/my-rewards', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+  
+        console.log('Rewards response:', response.data);
+  
+        if (response.data.success) {
+          setPointsBalance(response.data.data.pointsBalance);
+          setUserRewards(response.data.data.rewards);
+        }
+      } catch (error: any) {
+        console.error('Error fetching user rewards:', error.response?.data || error.message);
       }
-    } catch (error: any) {
-      console.error('Error fetching user rewards:', error.response?.data || error.message);
-    }
   };
 
   const handleRedeem = async () => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaRecycle, FaCalendar, FaMapMarkerAlt } from 'react-icons/fa';
-import axios from 'axios';
+import api from '../api';
 import './Pickup.css';
 
 const Pickup: React.FC = () => {
@@ -28,20 +28,13 @@ const Pickup: React.FC = () => {
     setSubmitMessage('');
 
     try {
-      // The auth token is now automatically added by the axios interceptor
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
+      // The API client now automatically adds the token.
+      // We just need to check if the user is logged in.
+      if (!localStorage.getItem('accessToken')) {
         setSubmitMessage('Please login to submit a pickup request.');
-        setIsSubmitting(false); // Stop submission if not logged in
         return;
       }
-
-      const response = await axios.post('/api/pickups', formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.post('/pickups', formData);
 
       if (response.data.success) {
         setSubmitMessage('Pickup scheduled successfully! You will receive a confirmation email shortly.');

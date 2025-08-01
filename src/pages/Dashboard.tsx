@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaChartBar, FaRecycle, FaTrophy, FaCalendarAlt, FaArrowRight, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import axios from 'axios';
+import api from '../api';
 import './Dashboard.css';
 
 interface Pickup {
@@ -52,14 +52,7 @@ const Dashboard: React.FC = () => {
 
   const fetchUserPickups = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) return;
-
-      const response = await axios.get('/api/pickups/my-pickups', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/pickups/my-pickups');
 
       if (response.data.success) {
         setPickups(response.data.data);
@@ -84,20 +77,9 @@ const Dashboard: React.FC = () => {
 
   const fetchUserPoints = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        console.log('No access token found');
-        return;
-      }
-
-      console.log('Fetching user points with token:', token.substring(0, 20) + '...');
+      // The token is now added automatically by the interceptor
+      const response = await api.get('/rewards/my-rewards');
       
-      const response = await axios.get('/api/rewards/my-rewards', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
       console.log('Points response:', response.data);
 
       if (response.data.success) {
