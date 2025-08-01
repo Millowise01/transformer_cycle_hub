@@ -13,6 +13,7 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -50,20 +51,18 @@ const Login: React.FC = () => {
         localStorage.setItem('accessToken', response.data.data.accessToken);
         localStorage.setItem('refreshToken', response.data.data.refreshToken);
         localStorage.setItem('userData', JSON.stringify(response.data.data.user));
-        localStorage.setItem('isAuthenticated', 'true');
-        
-        // Check user role and redirect accordingly
-        const userRole = response.data.data.user.role;
-        
-        // Show success message
-        alert('Login successful! Welcome back!');
-        
-        // Navigate based on user role
-        if (userRole === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
+
+        setLoginSuccess('Login successful! Redirecting...');
+
+        // Navigate based on user role after a short delay
+        setTimeout(() => {
+          const userRole = response.data.data.user.role;
+          if (userRole === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        }, 1500); // 1.5 second delay
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -98,6 +97,12 @@ const Login: React.FC = () => {
           {error && (
             <div className="error-message">
               {error}
+            </div>
+          )}
+
+          {loginSuccess && (
+            <div className="success-message">
+              {loginSuccess}
             </div>
           )}
 

@@ -16,7 +16,9 @@ import './App.css';
 
 // Simple authentication check (replace with proper auth later)
 const isAuthenticated = () => {
-  return localStorage.getItem('isAuthenticated') === 'true';
+  // A more robust check would be to validate the token, but for now,
+  // we'll just check if the token exists.
+  return !!localStorage.getItem('accessToken');
 };
 
 // Check if user is admin
