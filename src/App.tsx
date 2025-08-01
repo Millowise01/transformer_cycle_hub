@@ -9,45 +9,36 @@ import Tutorials from './pages/Tutorials';
 import Rewards from './pages/Rewards';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
-import { SignUp } from './pages/SignUp';
+import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
-// Simple authentication check (replace with proper auth later)
+// Authentication check
 const isAuthenticated = () => {
-  // A more robust check would be to validate the token, but for now,
-  // we'll just check if the token exists.
-  return !!localStorage.getItem('accessToken');
+  return Boolean(localStorage.getItem('accessToken'));
 };
 
-// Check if user is admin
+// Admin role check
 const isAdmin = () => {
   const userData = localStorage.getItem('userData');
-  if (userData) {
-    try {
-      const user = JSON.parse(userData);
-      return user.role === 'admin';
-    } catch (error) {
-      return false;
-    }
+  try {
+    const user = userData ? JSON.parse(userData) : null;
+    return user?.role === 'admin';
+  } catch {
+    return false;
   }
-  return false;
 };
 
-// Protected Route Component
+// Protected user route
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return isAuthenticated() ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
-// Admin Route Component
+// Protected admin route
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
-  }
-  if (!isAdmin()) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+  if (!isAdmin()) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 };
 
@@ -76,4 +67,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
